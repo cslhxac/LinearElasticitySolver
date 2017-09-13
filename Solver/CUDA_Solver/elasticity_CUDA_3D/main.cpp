@@ -10,7 +10,7 @@
 #include "../CUDA_Kernels/SPGrid_Master_Array_Linearizer.h"
 #include "../CUDA_Kernels/Linear_Elasticity_CUDA_Optimized.h"
 #include "../CUDA_Kernels/CG_SOLVER_CUDA.h"
-#include "../Write_SPGrid_To_Point_Cloud.h"
+//#include "../Write_SPGrid_To_Point_Cloud.h"
 #include "../File_Parser.h"
 
 #include <boost/program_options.hpp>
