@@ -6,6 +6,7 @@
 #define __SPGRID_MASTER_ARRAY_LINEARIZER_H__
 #include <SPGrid/Core/SPGrid_Allocator.h>
 #include <array>
+#include <iostream>
 #include <cstring>
 #include <limits>
 #include <unordered_map>
