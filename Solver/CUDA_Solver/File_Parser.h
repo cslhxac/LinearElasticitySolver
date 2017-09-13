@@ -8,6 +8,7 @@
 #include <fstream>
 #include <regex>
 #include <vector>
+#include <boost/filesystem.hpp>
 namespace fs = boost::filesystem;
 
 using namespace PhysBAM;
