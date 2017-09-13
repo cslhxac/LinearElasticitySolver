@@ -9,7 +9,7 @@ add_executable( linear_elasticity_test
 
 TARGET_INCLUDE_DIRECTORIES( linear_elasticity_test PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/../../../Common_Libraries )
 TARGET_INCLUDE_DIRECTORIES( linear_elasticity_test PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/../../../Public_Library )
-TARGET_INCLUDE_DIRECTORIES( linear_elasticity_test PUBLIC ${CUDA_TOOLKIT_ROOT_DIR}/include )
+TARGET_INCLUDE_DIRECTORIES( linear_elasticity_test PUBLIC ${CUDA_TOOLKIT_INCLUDE} )
 
 
 target_link_libraries( linear_elasticity_test
