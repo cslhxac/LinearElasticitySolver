@@ -5,7 +5,7 @@
 #include <random>
 #include "../ELASTICITY_FLAGS.h"
 #include "../ELASTICITY_STRUCT.h"
-#include "../HIERARCHICAL_RANGE_ITERATOR.h"
+//#include "../HIERARCHICAL_RANGE_ITERATOR.h"
 //#include "../SPGrid_Linear_Elasticity.h"
 #include "../CUDA_Kernels/SPGrid_Master_Array_Linearizer.h"
 #include "../CUDA_Kernels/Linear_Elasticity_CUDA_Optimized.h"
