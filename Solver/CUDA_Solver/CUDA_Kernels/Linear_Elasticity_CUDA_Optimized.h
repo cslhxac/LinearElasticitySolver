@@ -22,6 +22,7 @@ class Linear_Elasticity_CUDA_Optimized<T,log2_struct,3,T_offset_ptr>
     const T* const lambda;
     const T_offset_ptr* const b;   // block offset stream
     const int size;     // number of blocks to process
+    const T one_over_dx;
     enum {
         block_xsize = 1u << T_MASK::block_xbits,
         block_ysize = 1u << T_MASK::block_ybits,
@@ -31,7 +32,8 @@ class Linear_Elasticity_CUDA_Optimized<T,log2_struct,3,T_offset_ptr>
 public:
     explicit Linear_Elasticity_CUDA_Optimized(T* const f[d],const T* const u[d],
                                               const T* const mu,const T* const lambda,
-                                              const T_offset_ptr* const b,const int size);
+                                              const T_offset_ptr* const b,const int size,
+                                              const T one_over_dx);
     
     void Run();
 };

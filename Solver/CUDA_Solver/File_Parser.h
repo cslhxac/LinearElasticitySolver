@@ -8,8 +8,6 @@
 #include <fstream>
 #include <regex>
 #include <vector>
-#include <boost/filesystem.hpp>
-namespace fs = boost::filesystem;
 
 using namespace PhysBAM;
 
@@ -34,6 +32,7 @@ public:
         T mu;
         T lambda;};
     std::vector<Material> materials;
+    // This is the nodal grid size, equals to (cell grid size + 1).
     std_array<int,d> size;
  
     File_Parser(){static_assert(d==3,"only 3D is supported for the file reader");}
@@ -90,6 +89,16 @@ public:
                          ELASTICITY_FIELD<T,T_STRUCT,d> u_fields[d],
                          ELASTICITY_FIELD<T,T_STRUCT,d> f_fields[d])
     {
+        auto flag=flag_field.Get_Array();
+        // iterate through the nodes
+        for(int i=0;i<size(0);++i)
+        for(int j=0;j<size(1);++j)
+        for(int k=0;k<size(2);++k){
+            std_array<int,d> node_index(i,j,k);
+            const unsigned long offset=T_MASK::Linear_Offset(node_index);
+            const unsigned tmp=Elasticity_Node_Type_Active;
+            flag(offset)=*reinterpret_cast<const T*>(&tmp);}
+
         std::ifstream file;
         file.open(file_name, std::ios::in);
         std::string line;
@@ -99,9 +108,10 @@ public:
                 auto lambda=lambda_field.Get_Array();
                 std::getline(file,line);
                 std::stringstream stream(line);
-                for(int i=0;i<size(0);++i)
-                for(int j=0;j<size(1);++j)
-                for(int k=0;k<size(2);++k){
+                // iterate through the cells
+                for(int i=0;i<size(0)-1;++i)
+                for(int j=0;j<size(1)-1;++j)
+                for(int k=0;k<size(2)-1;++k){
                     std_array<int,d> cell_index(i,j,k);
                     const unsigned long offset=T_MASK::Linear_Offset(cell_index);
                     int mat;
@@ -109,7 +119,6 @@ public:
                     mu(offset)=materials[mat].mu;
                     lambda(offset)=materials[mat].lambda;}}
             if(line.compare(0,6,std::string("#psi_D"))==0){
-                auto flag=flag_field.Get_Array();
                 std::getline(file,line);
                 int nDirichlet_Nodes=std::stoi(line);
                 for(int i=0;i<nDirichlet_Nodes;++i){

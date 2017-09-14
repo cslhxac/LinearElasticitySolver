@@ -10,7 +10,7 @@
 #include "../CUDA_Kernels/SPGrid_Master_Array_Linearizer.h"
 #include "../CUDA_Kernels/Linear_Elasticity_CUDA_Optimized.h"
 #include "../CUDA_Kernels/CG_SOLVER_CUDA.h"
-//#include "../Write_SPGrid_To_Point_Cloud.h"
+#include "../Write_SPGrid_To_Point_Cloud.h"
 #include "../File_Parser.h"
 
 #include <boost/program_options.hpp>
@@ -68,7 +68,8 @@ int main(int argc,char* argv[]) {
     if(vm.count("dx")){
         dx=vm["dx"].as<float>();
     }else{
-        dx=1.0f/T(file_parser.size(0));}
+        dx=1.0f/T(file_parser.size(0)-1);}
+    std::cout<<"dx                      : "<<dx<<std::endl; 
     
     SPG_Allocator allocator1(file_parser.size),allocator2(file_parser.size),
         allocator3(file_parser.size),allocator4(file_parser.size),allocator5(file_parser.size);
@@ -97,7 +98,7 @@ int main(int argc,char* argv[]) {
 
     file_parser.Populate_SPGrid(input_file,mu_field,lambda_field,flag_field,u_fields,f_fields);
 
-    //SPGrid_To_Point_Cloud<T,T_STRUCT,d> writer(blocks,u_fields,flag_field,"output",0,dx);
+    {SPGrid_To_Point_Cloud<T,T_STRUCT,d> writer(blocks,u_fields,flag_field,"output",0,dx);}
     
     using T_offset_ptr=unsigned int;
     CG_SOLVER_CUDA<T,T_STRUCT,d,T_offset_ptr> solver(blocks.Get_Blocks(),dx);
@@ -108,7 +109,7 @@ int main(int argc,char* argv[]) {
     solver.Solve();
     solver.Update_U(allocator1,allocator2);        
     //Write to point cloud
-    //SPGrid_To_Point_Cloud<T,T_STRUCT,d> writer(blocks,u_fields,flag_field,"output",1,dx);
+    {SPGrid_To_Point_Cloud<T,T_STRUCT,d> writer(blocks,u_fields,flag_field,"output",1,dx);}
     
     return 0;
 }

@@ -20,6 +20,7 @@ struct Parameters{
     const float* lambda;
     const unsigned int* b;
     unsigned int number_of_blocks;
+    float dx;
 };
 
 // TODO: Remove the explicit template parameters on this one.
@@ -1164,7 +1165,7 @@ __global__ void Linear_Elasticity_Kernel_3D()
             f_node[w] += m[w][v] * u_local[x + 2][y + 2][z + 2][v];
 
         for(int v = 0;v < d;++v)
-            reinterpret_cast<T*>((unsigned long)para.f[v] + (unsigned long)block_index[13])[entry] = f_node[v]; 
+            reinterpret_cast<T*>((unsigned long)para.f[v] + (unsigned long)block_index[13])[entry] = f_node[v] * para.dx; 
     }
 }
 //#####################################################################
@@ -1173,8 +1174,9 @@ __global__ void Linear_Elasticity_Kernel_3D()
 template <class T, int log2_struct,class T_offset_ptr>
 Linear_Elasticity_CUDA_Optimized<T,log2_struct,3,T_offset_ptr>::Linear_Elasticity_CUDA_Optimized(T* const f_input[d],const T* const u_input[d],
                                                                                                  const T* const mu_input,const T* const lambda_input,
-                                                                                                 const T_offset_ptr* const b_input,const int size_input)
-    :mu(mu_input),lambda(lambda_input),b(b_input),size(size_input)
+                                                                                                 const T_offset_ptr* const b_input,const int size_input,
+                                                                                                 const T one_over_dx_input)
+    :mu(mu_input),lambda(lambda_input),b(b_input),size(size_input),one_over_dx(one_over_dx_input)
 {
     for(int v=0;v<d;++v){f[v]=f_input[v];u[v]=u_input[v];}
 }
@@ -1201,6 +1203,7 @@ void Linear_Elasticity_CUDA_Optimized<T,log2_struct,3,T_offset_ptr>::Run()
     p.lambda = lambda;
     p.b = b;
     p.number_of_blocks = size;
+    p.dx = T(1.0f)/one_over_dx;
     cudaMemcpyToSymbol(p_device,(void*)&p,sizeof(Parameters),0,cudaMemcpyHostToDevice);
     
     auto cudaerror = cudaGetLastError();    
@@ -1209,10 +1212,12 @@ void Linear_Elasticity_CUDA_Optimized<T,log2_struct,3,T_offset_ptr>::Run()
 
     Linear_Elasticity_Kernel_3D<T,T_offset_ptr,block_xsize,block_ysize,block_zsize>
         <<<number_of_cuda_blocks,THREADBLOCK,0>>>();
+#if 0
     cudaDeviceSynchronize();
     cudaerror = cudaGetLastError();
     if(cudaSuccess!=cudaerror){
         std::cerr<<"CUDA ERROR: "<<cudaGetErrorString(cudaerror)<<std::endl;abort();}
+#endif
 }
 //#####################################################################################################
 template class Linear_Elasticity_CUDA_Optimized<float,3,3,unsigned int>;
