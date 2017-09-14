@@ -1175,8 +1175,8 @@ template <class T, int log2_struct,class T_offset_ptr>
 Linear_Elasticity_CUDA_Optimized<T,log2_struct,3,T_offset_ptr>::Linear_Elasticity_CUDA_Optimized(T* const f_input[d],const T* const u_input[d],
                                                                                                  const T* const mu_input,const T* const lambda_input,
                                                                                                  const T_offset_ptr* const b_input,const int size_input,
-                                                                                                 const T one_over_dx_input)
-    :mu(mu_input),lambda(lambda_input),b(b_input),size(size_input),one_over_dx(one_over_dx_input)
+                                                                                                 const T dx_input)
+    :mu(mu_input),lambda(lambda_input),b(b_input),size(size_input),dx(dx_input)
 {
     for(int v=0;v<d;++v){f[v]=f_input[v];u[v]=u_input[v];}
 }
@@ -1203,7 +1203,7 @@ void Linear_Elasticity_CUDA_Optimized<T,log2_struct,3,T_offset_ptr>::Run()
     p.lambda = lambda;
     p.b = b;
     p.number_of_blocks = size;
-    p.dx = T(1.0f)/one_over_dx;
+    p.dx = dx;
     cudaMemcpyToSymbol(p_device,(void*)&p,sizeof(Parameters),0,cudaMemcpyHostToDevice);
     
     auto cudaerror = cudaGetLastError();    
