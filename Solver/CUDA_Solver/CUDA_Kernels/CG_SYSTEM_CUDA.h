@@ -21,8 +21,8 @@ class CG_SYSTEM_CUDA:public KRYLOV_SYSTEM_BASE<T>
     const T* lambda;
     const unsigned* flags;
     const T_offset_ptr* blocks;
-    T dx;
-    const unsigned int n_blocks;
+    const T dx;
+    const unsigned int n_blocks;    
 //#####################################################################
 public:
     CG_SYSTEM_CUDA(const T* mu,const T* lambda,const unsigned* flags,const T_offset_ptr* blocks,T dx,unsigned int n_blocks);
