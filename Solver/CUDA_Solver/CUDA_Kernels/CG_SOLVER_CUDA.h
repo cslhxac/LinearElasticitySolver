@@ -103,7 +103,8 @@ public:
         // Apply F = K::U
         Linear_Elasticity_CUDA_Optimized<T,log2_struct,d,T_offset_ptr> kernel(f,u,mu,lambda,
                                                                               linearizer.b_device,
-                                                                              linearizer.number_of_blocks);
+                                                                              linearizer.number_of_blocks,
+                                                                              dx);
         kernel.Run();
     }
     void Solve()
@@ -138,18 +139,17 @@ public:
         CG_VECTOR_CUDA<T,log2_struct,d,T_offset_ptr> s_v(s,blocks.second);
         CG_VECTOR_CUDA<T,log2_struct,d,T_offset_ptr> k_v(f,blocks.second);// Not used
         CG_VECTOR_CUDA<T,log2_struct,d,T_offset_ptr> z_v(r,blocks.second);// Not used
-        //Update Force Using Dirichlet Condition
-        //Compute_F();
-#if 1
+        //Update RHS Using Dirichlet Condition
         {
             // Apply F = K::U
             Linear_Elasticity_CUDA_Optimized<T,log2_struct,d,T_offset_ptr> kernel(r,u,mu,lambda,
                                                                                   linearizer.b_device,
-                                                                                  linearizer.number_of_blocks);
+                                                                                  linearizer.number_of_blocks,
+                                                                                  dx);
             kernel.Run();
-            f_v.Copy(-1,r_v,f_v);
+            f_v.Copy(-1,r_v,f_v);        
         }
-#endif
+
         //Zero initial guess, and clear dirichlet values.
         u_v.Copy(-1,u_v,u_v);
         
@@ -169,18 +169,16 @@ public:
                  z_v,
                  norm*1e-5,0,1000);
 
-        // //Scale u_v with dx^3. Note now u_device hold the data for the correction du
-        u_v.Copy(dx*dx*dx,u_v);
         linearizer.Copy_Data_From_Device(0);
         linearizer.Copy_Data_From_Device(1);
         linearizer.Deallocate_Auxiliary_Data();
     }
     void Update_U(SPG_Allocator& allocator1,SPG_Allocator& allocator2)
     {
-        // Apply u -= du to SPGrid
-        linearizer.template Accumulate_Data_From_Linearizer<T_STRUCT>(allocator1,0,&T_STRUCT::channel_0,-1.0f);
-        linearizer.template Accumulate_Data_From_Linearizer<T_STRUCT>(allocator1,0,&T_STRUCT::channel_1,-1.0f);
-        linearizer.template Accumulate_Data_From_Linearizer<T_STRUCT>(allocator2,1,&T_STRUCT::channel_0,-1.0f);
+        // Apply u += du to SPGrid
+        linearizer.template Accumulate_Data_From_Linearizer<T_STRUCT>(allocator1,0,&T_STRUCT::channel_0,1.0f);
+        linearizer.template Accumulate_Data_From_Linearizer<T_STRUCT>(allocator1,0,&T_STRUCT::channel_1,1.0f);
+        linearizer.template Accumulate_Data_From_Linearizer<T_STRUCT>(allocator2,1,&T_STRUCT::channel_0,1.0f);
     }
 };
 }
