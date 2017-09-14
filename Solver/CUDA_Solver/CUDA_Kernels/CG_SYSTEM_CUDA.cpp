@@ -18,7 +18,8 @@ using namespace PhysBAM;
 //#####################################################################
 template<class T,int log2_struct,int d,class T_offset_ptr> CG_SYSTEM_CUDA<T,log2_struct,d,T_offset_ptr>::
 CG_SYSTEM_CUDA(const T* mu_input,const T* lambda_input,const unsigned* flags_input,const T_offset_ptr* blocks_input,T dx_input,unsigned int n_blocks_input)
-    :BASE(false,false),mu(mu_input),lambda(lambda_input),flags(flags_input),blocks(blocks_input),dx(dx_input),n_blocks(n_blocks_input){}
+    :BASE(false,false),mu(mu_input),lambda(lambda_input),flags(flags_input),blocks(blocks_input),dx(dx_input),n_blocks(n_blocks_input)
+{}
 //#####################################################################
 // Function Multiply
 //#####################################################################
@@ -29,7 +30,7 @@ Multiply(const VECTOR_BASE& v,VECTOR_BASE& result) const
     auto result_field = CG_VECTOR_CUDA<T,log2_struct,d,T_offset_ptr>::Cg_Vector(result).field;
     //PHYSBAM_ASSERT(n_blocks == CG_VECTOR_CUDA<T,log2_struct,d,T_offset_ptr>::Cg_Vector(result).number_of_blocks);
     //PHYSBAM_ASSERT(n_blocks == CG_VECTOR_CUDA<T,log2_struct,d,T_offset_ptr>::Cg_Vector(v).number_of_blocks);
-    Linear_Elasticity_CUDA_Optimized<T,log2_struct,d,T_offset_ptr> helper(result_field,v_field,mu,lambda,blocks,n_blocks);
+    Linear_Elasticity_CUDA_Optimized<T,log2_struct,d,T_offset_ptr> helper(result_field,v_field,mu,lambda,blocks,n_blocks,dx);
     helper.Run();
 }
 //#####################################################################
