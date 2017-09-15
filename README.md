@@ -4,7 +4,7 @@
          How to build
 ################################
 
-1. create a build folder: midir build; cd build
+1. create a build folder: mkdir build; cd build
 
 2. cmake: cmake ../
 
