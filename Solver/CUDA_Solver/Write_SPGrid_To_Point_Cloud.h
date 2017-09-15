@@ -1,6 +1,5 @@
 #ifndef __WRITE_SPGRID_TO_POINT_CLOUD__
 #define __WRITE_SPGRID_TO_POINT_CLOUD__
-#include <Common_Tools/Math_Tools/RANGE_ITERATOR.h>
 #include <SPGrid/Core/SPGrid_Allocator.h>
 #include <SPGrid/Core/SPGrid_Blocks.h>
 #include <SPGrid/Tools/SPGrid_Block_Iterator.h>
