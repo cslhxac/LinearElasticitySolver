@@ -14,6 +14,8 @@
 #include "../ELASTICITY_STRUCT.h"
 #include "../CUDA_Kernels/Linear_Elasticity_CUDA_Optimized.h"
 
+#include <chrono>
+
 using namespace SPGrid;
 
 namespace PhysBAM{
@@ -159,6 +161,7 @@ public:
         T norm=cg_system.Convergence_Norm(f_v);
         cg.print_residuals=true;
         cg.print_diagnostics=true;
+        std::chrono::steady_clock::time_point start = std::chrono::steady_clock::now();
         cg.Solve(cg_system,
                  u_v,
                  f_v,
@@ -168,6 +171,10 @@ public:
                  k_v,
                  z_v,
                  norm*1e-5,0,1000);
+        std::chrono::steady_clock::time_point end = std::chrono::steady_clock::now();
+        std::cout << "CG solve time: "
+                  << (double)std::chrono::duration_cast<std::chrono::microseconds>(end - start).count()/double(1000000)
+                  << "sec."<<std::endl;
 
         linearizer.Copy_Data_From_Device(0);
         linearizer.Copy_Data_From_Device(1);

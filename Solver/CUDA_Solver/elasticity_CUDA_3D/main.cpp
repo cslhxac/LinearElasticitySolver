@@ -35,6 +35,7 @@ int main(int argc,char* argv[]) {
         ( "output",po::value<std::string>(),"Output file name")
         ( "dx",po::value<float>(),"Grid cell size")
         ( "GPU_ID",po::value<int>(),"Using GPU #")
+        ( "grid_size",po::value<int>(),"Grid size for testing, use this if no input file is provided")
         ;
 
     po::variables_map vm;po::store(po::parse_command_line(argc,argv,config),vm);
@@ -51,24 +52,33 @@ int main(int argc,char* argv[]) {
         cudaSetDevice(0);}
 
     std::string input_file;
+    bool input_file_provided=false;
     if(vm.count("input")){
         input_file=vm["input"].as<std::string>();
-    }else{
-        std::cout<<"Please provide an input file."<<std::endl;
-        return 1;}
+        input_file_provided=true;}
 
     std::string output_file="out";
-    if(vm.count("output")){
-        output_file=vm["output"].as<std::string>();}
+    bool write_output=false;
+    if(vm.count("output")){        
+        output_file=vm["output"].as<std::string>();
+        write_output=true;}
 
     File_Parser<T,T_STRUCT,d> file_parser;
-    file_parser.Parse_Basic_Info(input_file);
+    if(input_file_provided){
+        file_parser.Parse_Basic_Info(input_file);
+    }else{
+        if(vm.count("grid_size")){
+            file_parser.Generate_Basic_Info(vm["grid_size"].as<int>());}
+        else{
+            std::cerr<<"Please provide either an input file, or a valid grid size."<<std::endl;
+            return 1;}}
 
     T dx;
     if(vm.count("dx")){
         dx=vm["dx"].as<float>();
     }else{
         dx=1.0f/T(file_parser.size(0)-1);}
+
     std::cout<<"dx                      : "<<dx<<std::endl; 
     
     SPG_Allocator allocator1(file_parser.size),allocator2(file_parser.size),
@@ -96,9 +106,13 @@ int main(int argc,char* argv[]) {
     ELASTICITY_FIELD<T,T_STRUCT,d> flag_field;
     flag_field.channel=&T_STRUCT::channel_0;flag_field.allocator=&allocator5;
 
-    file_parser.Populate_SPGrid(input_file,mu_field,lambda_field,flag_field,u_fields,f_fields);
-
-    {SPGrid_To_Point_Cloud<T,T_STRUCT,d> writer(blocks,u_fields,flag_field,"output",0,dx);}
+    if(input_file_provided){
+        file_parser.Populate_SPGrid(input_file,mu_field,lambda_field,flag_field,u_fields,f_fields);
+    }else{
+        file_parser.Generate_SPGrid(mu_field,lambda_field,flag_field,u_fields,f_fields);
+    }
+    if(write_output)
+        SPGrid_To_Point_Cloud<T,T_STRUCT,d> writer(blocks,u_fields,flag_field,"output",0,dx);
     
     using T_offset_ptr=unsigned int;
     CG_SOLVER_CUDA<T,T_STRUCT,d,T_offset_ptr> solver(blocks.Get_Blocks(),dx);
@@ -109,7 +123,8 @@ int main(int argc,char* argv[]) {
     solver.Solve();
     solver.Update_U(allocator1,allocator2);        
     //Write to point cloud
-    {SPGrid_To_Point_Cloud<T,T_STRUCT,d> writer(blocks,u_fields,flag_field,"output",1,dx);}
+    if(write_output)
+        SPGrid_To_Point_Cloud<T,T_STRUCT,d> writer(blocks,u_fields,flag_field,"output",1,dx);
     
     return 0;
 }

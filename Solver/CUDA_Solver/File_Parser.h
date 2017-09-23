@@ -37,6 +37,16 @@ public:
  
     File_Parser(){static_assert(d==3,"only 3D is supported for the file reader");}
     
+    void Generate_Basic_Info(int grid_size)
+    {
+        materials.resize(1);
+        materials[0].mu=1.0f;
+        materials[0].lambda=0.33f;
+        size(0)=grid_size;
+        size(1)=grid_size;
+        size(2)=grid_size;
+    }
+
     void Parse_Basic_Info(const std::string file_name)
     {
         std::ifstream file;
@@ -158,6 +168,53 @@ public:
                     f_fields[2].Get_Array()(offset)=std::stof(line);}}
         }     
         file.close();
+    }
+    void Generate_SPGrid(ELASTICITY_FIELD<T,T_STRUCT,d> mu_field,
+                         ELASTICITY_FIELD<T,T_STRUCT,d> lambda_field,
+                         ELASTICITY_FIELD<T,T_STRUCT,d> flag_field,
+                         ELASTICITY_FIELD<T,T_STRUCT,d> u_fields[d],
+                         ELASTICITY_FIELD<T,T_STRUCT,d> f_fields[d])
+    {
+        auto flag=flag_field.Get_Array();
+        auto mu=mu_field.Get_Array();
+        auto lambda=lambda_field.Get_Array();
+        // iterate through the nodes
+        for(int i=0;i<size(0);++i)
+        for(int j=0;j<size(1);++j)
+        for(int k=0;k<size(2);++k){
+            std_array<int,d> node_index(i,j,k);
+            const unsigned long offset=T_MASK::Linear_Offset(node_index);
+            const unsigned tmp=Elasticity_Node_Type_Active;
+            flag(offset)=*reinterpret_cast<const T*>(&tmp);}
+
+        for(int i=0;i<size(0)-1;++i)
+        for(int j=0;j<size(1)-1;++j)
+        for(int k=0;k<size(2)-1;++k){
+            std_array<int,d> cell_index(i,j,k);
+            const unsigned long offset=T_MASK::Linear_Offset(cell_index);
+            mu(offset)=materials[0].mu;
+            lambda(offset)=materials[0].lambda;}
+
+        {int i=0;
+         for(int j=0;j<size(1);++j)
+         for(int k=0;k<size(2);++k){
+             std_array<int,d> node_index(i,j,k);
+             const unsigned long offset=T_MASK::Linear_Offset(node_index);
+             const unsigned tmp=(*reinterpret_cast<const unsigned*>(&flag(offset)))|(Elasticity_Node_Type_DirichletX|
+                                                                                     Elasticity_Node_Type_DirichletY|
+                                                                                     Elasticity_Node_Type_DirichletZ);
+             flag(offset)=*reinterpret_cast<const T*>(&tmp);}}
+
+        {int i=size(0)-1;
+         for(int j=0;j<size(1);++j)
+         for(int k=0;k<size(2);++k){
+             std_array<int,d> node_index(i,j,k);
+             const unsigned long offset=T_MASK::Linear_Offset(node_index);            
+             const unsigned tmp=(*reinterpret_cast<const unsigned*>(&flag(offset)))|(Elasticity_Node_Type_DirichletX|
+                                                                                     Elasticity_Node_Type_DirichletY|
+                                                                                     Elasticity_Node_Type_DirichletZ);
+             flag(offset)=*reinterpret_cast<const T*>(&tmp);
+             u_fields[0].Get_Array()(offset)=0.5;}}
     }
 };
 }
